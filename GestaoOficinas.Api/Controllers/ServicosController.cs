@@ -9,7 +9,7 @@ namespace GestaoOficinas.Api.Controllers
 {
     [ApiController]
     [Route("servico")]
-    [Authorize("Bearer")]
+    [Authorize]
     public class ServicosController : Controller
     {
         private readonly GestaoOficinasApiContext _context;
@@ -46,7 +46,6 @@ namespace GestaoOficinas.Api.Controllers
         // POST: Servicos
         // BODY: {object}
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,UnidadesTrabalhoRequerida")] Servico servico)
         {
             if (ModelState.IsValid)
@@ -61,7 +60,6 @@ namespace GestaoOficinas.Api.Controllers
         // PUT: Servicos/{id}
         // BODY: {object}
         [HttpPut("{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(long id, [Bind("Name,UnidadesTrabalhoRequerida")] Servico servico)
         {
 
@@ -92,7 +90,6 @@ namespace GestaoOficinas.Api.Controllers
 
         // DELETE: Servicos/{id}
         [HttpDelete("{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(long id)
         {
             var servico = await _context.Servico.FindAsync(id);

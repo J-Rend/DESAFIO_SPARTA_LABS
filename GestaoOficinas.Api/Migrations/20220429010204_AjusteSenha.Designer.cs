@@ -4,6 +4,7 @@ using GestaoOficinas.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestaoOficinas.Api.Migrations
 {
     [DbContext(typeof(GestaoOficinasApiContext))]
-    partial class GestaoOficinasApiContextModelSnapshot : ModelSnapshot
+    [Migration("20220429010204_AjusteSenha")]
+    partial class AjusteSenha
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -16,6 +16,9 @@ namespace GestaoOficinas.Api.Models
         [Required]
         public int  UnidadesTrabalhoRequerida { get; set; }
 
+        [Required(ErrorMessage ="Informe uma oficina.")]
+        public long Id_oficina { get; set; }
+
 
     }
 }

@@ -55,10 +55,14 @@ namespace GestaoOficinas.Api.Controllers
             {
                 oficina.Password = TokenService.CreateMD5(oficina.Password);
                 _context.Add(oficina);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync(); 
+                return new OkObjectResult(new
+                {
+                    Message = "SUCCESS",
+                    Description = "Oficina criada com sucesso!"
+                });
             }
-            return new OkObjectResult(oficina);
+            return new BadRequestResult();
         }
 
         // PUT: Oficinas/{id}
@@ -87,7 +91,7 @@ namespace GestaoOficinas.Api.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return new BadRequestResult();
             }
             return new OkObjectResult(oficina);
         }
@@ -99,8 +103,12 @@ namespace GestaoOficinas.Api.Controllers
         {
             var oficina = await _context.Oficina.FindAsync(id);
             _context.Oficina.Remove(oficina);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            await _context.SaveChangesAsync(); 
+            return new OkObjectResult(new
+            {
+                Message = "SUCCESS",
+                Description = "Oficina deletada com sucesso!"
+            });
         }
         [NonAction]
         private bool OficinaExists(long id)

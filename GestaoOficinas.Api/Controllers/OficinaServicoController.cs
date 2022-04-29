@@ -10,6 +10,7 @@ using GestaoOficinas.Api.Data;
 using GestaoOficinas.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using GestaoOficinas.Api.ValueObjects;
+using GestaoOficinas.Api.Interfaces.Services;
 
 namespace GestaoOficinas.Api.Controllers
 {
@@ -19,9 +20,11 @@ namespace GestaoOficinas.Api.Controllers
     {
         private readonly GestaoOficinasApiContext _context;
 
-        public OficinaServicoController(GestaoOficinasApiContext context)
+        private readonly IOficinaServicoService _service;
+        public OficinaServicoController(GestaoOficinasApiContext context, IOficinaServicoService service)
         {
             _context = context;
+            _service = service;
         }
 
         // GET: OficinaServico
@@ -94,9 +97,8 @@ namespace GestaoOficinas.Api.Controllers
         {
             if (ModelState.IsValid)
             {
-                #region Validação por final de semana
-                var diaSemana = oficinaServico.DataServico.DayOfWeek;
-                if ( diaSemana == DayOfWeek.Sunday || diaSemana == DayOfWeek.Saturday)
+                #region Validando se o dia solicitado cai num final de semana
+                if(!_service.ValidacaoFinalSemana(oficinaServico))
                     return new ObjectResult(new
                     {
                         Message = "ERROR",
@@ -106,51 +108,38 @@ namespace GestaoOficinas.Api.Controllers
                 #endregion
                 else
                 {
-                    #region Validação por tempo disponível no dia
+                    #region Validando se no dia solicitado haverá tempo para a execução do serviço
 
-                    var servicosOficinaDia = _context.OficinaServico
-                        .Where(os => os.DataServico == oficinaServico.DataServico && os.OficinaId == oficinaServico.OficinaId).ToList();
+                    var oficinaServicosDia = await _context.OficinaServico
+                        .Where
+                        (os => os.DataServico == oficinaServico.DataServico && os.OficinaId == oficinaServico.OficinaId)
+                        .ToListAsync();
 
                     var servicos = _context.Servico
                         .Where(s => s.Id_oficina == oficinaServico.OficinaId).ToList();
 
+                    var servicoSolicitado = await _context.Servico.FindAsync(oficinaServico.ServicoId);
 
-                    var tempoDiarioTotal = _context.Oficina
-                        .Where(o => o.Id == oficinaServico.OficinaId).ToList()
-                        [0].UnidadeTempoDiaria;
-                    var tempoConsumidoTotal = 0;
-                 
-                    var dump = new List<Servico>(); // ALGO HÁ SER MUDADO, UM DIA, TALVEZ
-                    foreach(var item in servicosOficinaDia)
-                    {
-                        foreach (var item_day in servicos)
-                        {
-                            if (item_day.Id == item.ServicoId)
-                                dump.Add(item_day);
-                        }
-                    }
-                    foreach(var item in dump)
-                    {
-                        tempoConsumidoTotal += item.UnidadesTrabalhoRequerida;
-                    }
+                    var oficina = await _context.Oficina.FindAsync(oficinaServico.OficinaId);
 
-                    if(tempoConsumidoTotal > tempoDiarioTotal)
+                    if (!_service.ValidacaoHorasDisponiveisPorDia(oficinaServicosDia, oficina,servicos, oficinaServico, servicoSolicitado))
                         return new ObjectResult(new
                         {
                             Message = "ERROR",
-                            Description = "Não é possível agendar um serviço em um final de semana!"
+                            Description = "A filial não possui tempo disponível no dia escolhido!"
                         }
-                       );
+                        );
                     else
-
-                    #endregion
-                    _context.Add(oficinaServico);
-                    await _context.SaveChangesAsync();
-                    return new OkObjectResult(new
                     {
-                        Message = "SUCCESS",
-                        Description = "Serviço agendado com sucesso!"
-                    });
+                        #endregion
+                        _context.Add(oficinaServico);
+                        await _context.SaveChangesAsync();
+                        return new OkObjectResult(new
+                        {
+                            Message = "SUCCESS",
+                            Description = "Serviço agendado com sucesso!"
+                        });
+                    }
                 }
             }
             return NotFound();

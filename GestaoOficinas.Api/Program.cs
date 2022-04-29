@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using GestaoOficinas.Api;
 using Microsoft.OpenApi.Models;
+using GestaoOficinas.Api.Interfaces.Services;
+using GestaoOficinas.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +47,7 @@ builder.Services.AddSwaggerGen(option =>
     });
 });
 builder.Services.AddScoped<IApplicationBuilder, ApplicationBuilder>();
+builder.Services.AddScoped<IOficinaServicoService, OficinaServicoService>();
 builder.Services.AddControllersWithViews();
 
 // Configurando Token JWT

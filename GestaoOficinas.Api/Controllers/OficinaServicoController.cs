@@ -13,8 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace GestaoOficinas.Api.Controllers
 {
     [ApiController]
-    [Route("oficina_servico")]
-    [Authorize("Bearer")]
+    [Route("oficina_servico"), Authorize]
     public class OficinaServicoController : Controller
     {
         private readonly GestaoOficinasApiContext _context;
@@ -49,7 +48,6 @@ namespace GestaoOficinas.Api.Controllers
 
         // POST: OficinaServico/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("OficinaId,ServicoId,DataServico")] OficinaServico oficinaServico)
         {
             if (ModelState.IsValid)
@@ -63,7 +61,6 @@ namespace GestaoOficinas.Api.Controllers
 
         // POST: OficinaServico/Edit/5
         [HttpPut("{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(long id, [Bind("Id,OficinaId,ServicoId,DataServico")] OficinaServico oficinaServico)
         {
             if (id != oficinaServico.Id)
@@ -98,7 +95,6 @@ namespace GestaoOficinas.Api.Controllers
 
         // POST: OficinaServico/Delete/5
         [HttpDelete("{id}")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(long id)
         {
             var oficinaServico = await _context.OficinaServico.FindAsync(id);

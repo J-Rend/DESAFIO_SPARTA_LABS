@@ -261,3 +261,4 @@ C:\Users\rendj\Desktop\DESAFIO_SPARTA_LABS\GestaoOficinas.Api\GestaoOficinas.Api
 C:\Users\rendj\Desktop\DESAFIO_SPARTA_LABS\GestaoOficinas.Api\GestaoOficinas.Api\obj\Debug\net6.0\GestaoOficinas.Api.pdb
 C:\Users\rendj\Desktop\DESAFIO_SPARTA_LABS\GestaoOficinas.Api\GestaoOficinas.Api\obj\Debug\net6.0\GestaoOficinas.Api.genruntimeconfig.cache
 C:\Users\rendj\Desktop\DESAFIO_SPARTA_LABS\GestaoOficinas.Api\GestaoOficinas.Api\obj\Debug\net6.0\ref\GestaoOficinas.Api.dll
+C:\Users\rendj\Desktop\DESAFIO_SPARTA_LABS\GestaoOficinas.Api\GestaoOficinas.Api\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

@@ -1,6 +1,7 @@
 ﻿#nullable disable
 using GestaoOficinas.Api.Data;
 using GestaoOficinas.Api.Models;
+using GestaoOficinas.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ namespace GestaoOficinas.Api.Controllers
 
         // GET: Oficinas
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<List<Oficina>>> Index()
         {
             var response = await _context.Oficina.ToListAsync();
@@ -28,6 +30,7 @@ namespace GestaoOficinas.Api.Controllers
 
         // GET: Oficinas/{id}
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetById(long? id)
         {
             if (id == null)
@@ -50,6 +53,7 @@ namespace GestaoOficinas.Api.Controllers
         {
             if (ModelState.IsValid)
             {
+                oficina.Password = TokenService.CreateMD5(oficina.Password);
                 _context.Add(oficina);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -60,7 +64,7 @@ namespace GestaoOficinas.Api.Controllers
         // PUT: Oficinas/{id}
         // BODY: {object}
         [HttpPut("{id}")]
-        [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(long id, [Bind("Name,CNPJ,Password,UnidadeTempoDiaria")] Oficina oficina)
         {
 
@@ -90,7 +94,7 @@ namespace GestaoOficinas.Api.Controllers
 
         // DELETE: Oficinas/{id}
         [HttpDelete("{id}")]
-        [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Delete(long id)
         {
             var oficina = await _context.Oficina.FindAsync(id);
@@ -98,6 +102,7 @@ namespace GestaoOficinas.Api.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        [NonAction]
         private bool OficinaExists(long id)
         {
             return _context.Oficina.Any(e => e.Id == id);

@@ -23,7 +23,7 @@ TODA A API FOI ARQUITETADA EM CIMA DE TRÊS ENTIDADES:
  TODAS AS ENTIDADES POSSUEM CRUD E AS ROTAS SÃO DEFINIDAS PELO NOME.
  
 A documentação foi feita no Swagger, e a pagina da documentação abre automaticamente quando você roda a aplicação no Visual Studio,
-caso não abra automaticamente, a porta dela fica sinalizada no CLI do Console que você estiver usando.
+caso não abra automaticamente, o endereço dela fica sinalizada no CLI do Console que você estiver usando.
 
                  
 # DETALHES SOBRE AS TECNOLOGIAS/FERRAMENTAS USADAS

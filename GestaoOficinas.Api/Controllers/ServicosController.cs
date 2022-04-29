@@ -23,7 +23,8 @@ namespace GestaoOficinas.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Servico.ToListAsync());
+            var response = await _context.Servico.ToListAsync();
+            return new OkObjectResult(response);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(long? id)
@@ -38,7 +39,7 @@ namespace GestaoOficinas.Api.Controllers
             {
                 return NotFound();
             }
-            return View(servico);
+            return new OkObjectResult(servico);
         }
 
 
@@ -52,9 +53,13 @@ namespace GestaoOficinas.Api.Controllers
             {
                 _context.Add(servico);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return new OkObjectResult(new
+                {
+                    Message = "SUCCESS",
+                    Description = "Serviço criado com sucesso!"
+                });
             }
-            return View(servico);
+            return new OkObjectResult(servico);
         }
 
         // PUT: Servicos/{id}
@@ -79,12 +84,16 @@ namespace GestaoOficinas.Api.Controllers
                     }
                     else
                     {
-                        throw;
+                        return new BadRequestResult();
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return new OkObjectResult(new
+                {
+                    Message = "SUCCESS",
+                    Description = "Serviço criado com sucesso!"
+                }); ;
             }
-            return View(servico);
+            return new BadRequestResult();
         }
 
 
@@ -95,7 +104,11 @@ namespace GestaoOficinas.Api.Controllers
             var servico = await _context.Servico.FindAsync(id);
             _context.Servico.Remove(servico);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return new OkObjectResult(new
+            {
+                Message = "SUCCESS",
+                Description = "Serviço deletado com sucesso!"
+            }); ;
         }
 
         private bool ServicoExists(long id)

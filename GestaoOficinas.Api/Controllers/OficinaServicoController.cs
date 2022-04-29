@@ -11,6 +11,7 @@ using GestaoOficinas.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using GestaoOficinas.Api.ValueObjects;
 using GestaoOficinas.Api.Interfaces.Services;
+using GestaoOficinas.Api.Services;
 
 namespace GestaoOficinas.Api.Controllers
 {
@@ -20,11 +21,10 @@ namespace GestaoOficinas.Api.Controllers
     {
         private readonly GestaoOficinasApiContext _context;
 
-        private readonly IOficinaServicoService _service;
-        public OficinaServicoController(GestaoOficinasApiContext context, IOficinaServicoService service)
+        private readonly OficinaServicoService _service = new OficinaServicoService();
+        public OficinaServicoController(GestaoOficinasApiContext context)
         {
             _context = context;
-            _service = service;
         }
 
         // GET: OficinaServico
@@ -35,16 +35,15 @@ namespace GestaoOficinas.Api.Controllers
             return new OkObjectResult(response);
         }
 
-        [HttpGet]
-        [Route("get_by_period")]
-        public async Task<ActionResult<List<OficinaServico>>> IndexByPeriodo([Bind("DataInicial,DataFinal")] Period period)
+        [HttpPost("get_servicos_by_period/{id}")]
+        public async Task<ActionResult<List<OficinaServico>>> IndexByPeriodo(long id,[Bind("DataInicial,DataFinal")] Period period)
         {
             var response = new List<OficinaServico>();
 
             if (period.DataInicial.ToString() != "" && period.DataFinal.ToString() != "")
             {
                 response = await _context.OficinaServico
-                    .Where(os => os.DataServico <= period.DataFinal && os.DataServico >= period.DataInicial)
+                    .Where(os => ((os.DataServico <= period.DataFinal && os.DataServico >= period.DataInicial) && os.OficinaId == id))
                     .ToListAsync();
 
             }
@@ -52,6 +51,36 @@ namespace GestaoOficinas.Api.Controllers
                 return new BadRequestResult();
 
             return new OkObjectResult(response);
+        }
+        [HttpPost("get_time_by_period/{id}")]
+        public async Task<ActionResult<List<UnidadeTrabalhoDia>>> GetTimeByPeriodo(long id,[Bind("DataInicial,DataFinal")] Period period)
+        {
+            var response = new List<UnidadeTrabalhoDia>();
+            var listaOficinaServico = new List<OficinaServico>();
+            var listaServicosTotais = new List<Servico>();
+
+            if (period.DataInicial.ToString() != "" && period.DataFinal.ToString() != "")
+            {
+                listaOficinaServico = await _context.OficinaServico
+                    .Where(os => ((os.DataServico <= period.DataFinal && os.DataServico >= period.DataInicial) && os.OficinaId == id))
+                    .ToListAsync();
+
+                listaServicosTotais = await _context.Servico
+                    .Where(s => s.Id_oficina == id)
+                    .ToListAsync();
+
+                var response_service = _service.GetUnidadeTrabalhoPeriodo(listaServicosTotais, listaOficinaServico);
+                if (response_service != null)
+                {
+                    return response_service;
+                }
+                else
+                {
+                    return new BadRequestResult();
+                }
+            }
+            else
+                return new BadRequestResult();
         }
 
         [HttpGet]
@@ -161,6 +190,11 @@ namespace GestaoOficinas.Api.Controllers
                     oficinaServico.Id = id;
                     _context.Update(oficinaServico);
                     await _context.SaveChangesAsync();
+                    return new OkObjectResult(new
+                    {
+                        Message = "SUCCESS",
+                        Description = "Serviço editado com sucesso!"
+                    });
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -170,12 +204,11 @@ namespace GestaoOficinas.Api.Controllers
                     }
                     else
                     {
-                        throw;
+                        return new BadRequestResult();
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            return View(oficinaServico);
+            return new BadRequestResult();
         }
 
 
@@ -186,7 +219,11 @@ namespace GestaoOficinas.Api.Controllers
             var oficinaServico = await _context.OficinaServico.FindAsync(id);
             _context.OficinaServico.Remove(oficinaServico);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return new OkObjectResult(new
+            {
+                Message = "SUCCESS",
+                Description = "Serviço excluido com sucesso!"
+            });
         }
 
         private bool OficinaServicoExists(long id)

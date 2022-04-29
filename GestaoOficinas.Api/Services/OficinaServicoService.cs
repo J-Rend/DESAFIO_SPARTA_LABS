@@ -1,5 +1,6 @@
 ﻿using GestaoOficinas.Api.Interfaces.Services;
 using GestaoOficinas.Api.Models;
+using GestaoOficinas.Api.ValueObjects;
 
 namespace GestaoOficinas.Api.Services
 {
@@ -19,9 +20,9 @@ namespace GestaoOficinas.Api.Services
 
             servicosDia = servicos
                 .Join(
-                idsServicos, 
-                servicos => servicos.Id_oficina, 
-                idsServicos => idsServicos, 
+                idsServicos,
+                servicos => servicos.Id_oficina,
+                idsServicos => idsServicos,
                 (servicos, idsServicos) => servicos)
                 .ToList();
 
@@ -29,9 +30,9 @@ namespace GestaoOficinas.Api.Services
             {
                 somatorioHoras += item.UnidadesTrabalhoRequerida;
             }
-            if(oficinaServico.DataServico.DayOfWeek == DayOfWeek.Thursday || oficinaServico.DataServico.DayOfWeek == DayOfWeek.Friday)
+            if (oficinaServico.DataServico.DayOfWeek == DayOfWeek.Thursday || oficinaServico.DataServico.DayOfWeek == DayOfWeek.Friday)
             {
-                if ((somatorioHoras + servico.UnidadesTrabalhoRequerida) > (oficina.UnidadeTempoDiaria + oficina.UnidadeTempoDiaria * (3/10)))
+                if ((somatorioHoras + servico.UnidadesTrabalhoRequerida) > (oficina.UnidadeTempoDiaria + oficina.UnidadeTempoDiaria * (3 / 10)))
                 {
                     return false;
                 }
@@ -39,7 +40,7 @@ namespace GestaoOficinas.Api.Services
                     return true;
 
             }
-            else if(oficinaServico.DataServico.DayOfWeek == DayOfWeek.Saturday || oficinaServico.DataServico.DayOfWeek == DayOfWeek.Sunday)
+            else if (oficinaServico.DataServico.DayOfWeek == DayOfWeek.Saturday || oficinaServico.DataServico.DayOfWeek == DayOfWeek.Sunday)
             {
                 return false;
             }
@@ -49,7 +50,7 @@ namespace GestaoOficinas.Api.Services
                 {
                     return false;
                 }
-                else 
+                else
                     return true;
             }
         }
@@ -60,8 +61,27 @@ namespace GestaoOficinas.Api.Services
 
             if (diaSemana == DayOfWeek.Sunday || diaSemana == DayOfWeek.Saturday)
                 return false;
-            else 
+            else
                 return true;
         }
+
+        public List<UnidadeTrabalhoDia> GetUnidadeTrabalhoPeriodo(List<Servico> servicos, List<OficinaServico> oficinaServicos)
+        {
+            var response = new List<UnidadeTrabalhoDia>();
+            var servicosDia = new List<Servico>();
+
+
+            foreach (var item in oficinaServicos)
+            {
+                response.Add(new UnidadeTrabalhoDia()
+                {
+                    Data = item.DataServico,
+                    UnidadeTrabalho = servicos.Where(s => s.Id == item.ServicoId).ToList()[0].UnidadesTrabalhoRequerida,
+                }
+                );
+            }
+            return response;
+        }
+
     }
 }

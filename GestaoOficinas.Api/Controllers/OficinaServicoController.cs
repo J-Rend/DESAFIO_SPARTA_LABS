@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using GestaoOficinas.Api.Data;
 using GestaoOficinas.Api.Models;
 using Microsoft.AspNetCore.Authorization;
+using GestaoOficinas.Api.ValueObjects;
 
 namespace GestaoOficinas.Api.Controllers
 {
@@ -25,10 +26,51 @@ namespace GestaoOficinas.Api.Controllers
 
         // GET: OficinaServico
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<List<OficinaServico>>> Index()
         {
-            return View(await _context.OficinaServico.ToListAsync());
+            var response = await _context.OficinaServico.ToListAsync();
+            return new OkObjectResult(response);
         }
+
+        [HttpGet]
+        [Route("get_by_period")]
+        public async Task<ActionResult<List<OficinaServico>>> IndexByPeriodo([Bind("DataInicial,DataFinal")] Period period)
+        {
+            var response = new List<OficinaServico>();
+
+            if (period.DataInicial.ToString() != "" && period.DataFinal.ToString() != "")
+            {
+                response = await _context.OficinaServico
+                    .Where(os => os.DataServico <= period.DataFinal && os.DataServico >= period.DataInicial)
+                    .ToListAsync();
+
+            }
+            else
+                return new BadRequestResult();
+
+            return new OkObjectResult(response);
+        }
+
+        [HttpGet]
+        [Route("get_by_day")]
+        public async Task<ActionResult<List<OficinaServico>>> IndexByDay(DateTime data)
+        {
+            var response = new List<OficinaServico>();
+
+            if (data.ToString() != "" && data.ToString() != "")
+            {
+                response = await _context.OficinaServico
+                    .Where(os => os.DataServico.DayOfYear == data.DayOfYear)
+                    .ToListAsync();
+
+            }
+            else
+                return new BadRequestResult();
+
+            return new OkObjectResult(response);
+        }
+
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(long? id)
         {
@@ -42,21 +84,76 @@ namespace GestaoOficinas.Api.Controllers
             {
                 return NotFound();
             }
-            return View(oficinaServico);
+            return new OkObjectResult(oficinaServico);
         }
 
 
         // POST: OficinaServico/Create
         [HttpPost]
-        public async Task<IActionResult> Create([Bind("OficinaId,ServicoId,DataServico")] OficinaServico oficinaServico)
+        public async Task<ActionResult<dynamic>> Create([Bind("OficinaId,ServicoId,DataServico")] OficinaServico oficinaServico)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(oficinaServico);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                #region Validação por final de semana
+                var diaSemana = oficinaServico.DataServico.DayOfWeek;
+                if ( diaSemana == DayOfWeek.Sunday || diaSemana == DayOfWeek.Saturday)
+                    return new ObjectResult(new
+                    {
+                        Message = "ERROR",
+                        Description = "Não é possível agendar um serviço em um final de semana!"
+                    }
+                    );
+                #endregion
+                else
+                {
+                    #region Validação por tempo disponível no dia
+
+                    var servicosOficinaDia = _context.OficinaServico
+                        .Where(os => os.DataServico == oficinaServico.DataServico && os.OficinaId == oficinaServico.OficinaId).ToList();
+
+                    var servicos = _context.Servico
+                        .Where(s => s.Id_oficina == oficinaServico.OficinaId).ToList();
+
+
+                    var tempoDiarioTotal = _context.Oficina
+                        .Where(o => o.Id == oficinaServico.OficinaId).ToList()
+                        [0].UnidadeTempoDiaria;
+                    var tempoConsumidoTotal = 0;
+                 
+                    var dump = new List<Servico>(); // ALGO HÁ SER MUDADO, UM DIA, TALVEZ
+                    foreach(var item in servicosOficinaDia)
+                    {
+                        foreach (var item_day in servicos)
+                        {
+                            if (item_day.Id == item.ServicoId)
+                                dump.Add(item_day);
+                        }
+                    }
+                    foreach(var item in dump)
+                    {
+                        tempoConsumidoTotal += item.UnidadesTrabalhoRequerida;
+                    }
+
+                    if(tempoConsumidoTotal > tempoDiarioTotal)
+                        return new ObjectResult(new
+                        {
+                            Message = "ERROR",
+                            Description = "Não é possível agendar um serviço em um final de semana!"
+                        }
+                       );
+                    else
+
+                    #endregion
+                    _context.Add(oficinaServico);
+                    await _context.SaveChangesAsync();
+                    return new OkObjectResult(new
+                    {
+                        Message = "SUCCESS",
+                        Description = "Serviço agendado com sucesso!"
+                    });
+                }
             }
-            return View(oficinaServico);
+            return NotFound();
         }
 
         // POST: OficinaServico/Edit/5
